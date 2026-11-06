@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import lru_cache
+import os
 
 from .models import SentimentResult
 
@@ -17,6 +18,7 @@ def _chunks(text: str, size: int = 1_500) -> list[str]:
 
 @lru_cache(maxsize=1)
 def _pipeline():
+    os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     try:
         from transformers import pipeline
     except ImportError as exc:
@@ -27,7 +29,7 @@ def _pipeline():
 def analyze_sentiment(text: str) -> SentimentResult:
     if not text or not text.strip():
         raise ValueError("Cannot analyze an empty announcement.")
-    results = _pipeline()(_chunks(text), truncation=True)
+    results = _pipeline()(_chunks(text[:20_000]), truncation=True)
     scores: dict[str, float] = defaultdict(float)
     for result in results:
         scores[str(result["label"]).lower()] += float(result["score"])

@@ -13,9 +13,8 @@ An educational Python/Gradio application for exploring Hong Kong-listed stock an
 - Fetch historical prices through Yahoo Finance.
 - Display the selected price range as a K-line/candlestick chart.
 - Download all matching announcements and notices silently into `downloads/<stock-code>/`.
-- Generate a local AI executive summary for each downloaded announcement.
-- Calculate simple returns over the announcement date and following five calendar days.
-- Display sentiment, confidence, executive summary, and event return together in one results table.
+- Generate a local executive summary for each downloaded announcement without loading a second large model.
+- Display announcement date, sentiment, confidence, and executive summary together in one results table.
 
 ## Setup
 
@@ -28,7 +27,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-The first sentiment analysis downloads FinBERT and the first executive summary downloads the summarization model; these first requests may take longer than later requests. The app also needs network access to HKEX and Yahoo Finance.
+The first sentiment analysis downloads FinBERT and may take longer than later requests. Executive summaries use a memory-safe local extractive method, so they do not require another model download. The app also needs network access to HKEX and Yahoo Finance.
 
 Each analysis creates a folder such as `downloads/00001/` and stores the retrieved PDF files there. The sentiment step then reads those saved local files. Downloaded files are excluded from Git by `.gitignore`.
 

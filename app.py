@@ -9,7 +9,7 @@ from time import perf_counter
 
 from src.document_parser import download_and_extract
 from src.hkex_client import fetch_announcements, normalize_stock_code
-from src.market_data import build_candlestick_chart, calculate_event_return, fetch_prices
+from src.market_data import build_candlestick_chart, fetch_prices
 from src.sentiment import analyze_sentiment
 from src.summarizer import generate_executive_summary
 
@@ -95,15 +95,7 @@ def analyze_stock(stock_code: str, start_date: object, end_date: object):
             logger.exception("Document or sentiment analysis failed for %s", announcement.title)
             executive_summary = f"Unavailable: {exc}"
 
-        yield update(f"📈 [{index}/{len(announcements)}] Calculating event-window return...")
-        try:
-            event = calculate_event_return(prices, announcement.published_at)
-            return_percent = event.return_percent
-            market_status = event.status
-        except (RuntimeError, ValueError) as exc:
-            logger.exception("Market-data analysis failed for %s", announcement.title)
-            return_percent = None
-            market_status = str(exc)
+        yield update(f"📝 [{index}/{len(announcements)}] Updating announcement analysis results...")
         rows.append(
             [
                 announcement.published_at.isoformat(),
@@ -111,8 +103,6 @@ def analyze_stock(stock_code: str, start_date: object, end_date: object):
                 sentiment_label,
                 sentiment_confidence,
                 executive_summary,
-                return_percent,
-                market_status,
             ]
         )
         yield update(f"✅ [{index}/{len(announcements)}] Finished analysis.")
@@ -138,9 +128,9 @@ def build_demo():
         status = gr.Markdown(value="Ready. Enter an HKEX stock code and click Analyze.")
         chart = gr.Plot(label="K-line candlestick price history")
         events = gr.Dataframe(
-            headers=["Announcement date", "Title", "Sentiment", "Confidence", "AI Executive Summary", "Return %", "Market status"],
-            label="Event-window returns and announcement analysis",
-            datatype=["str", "str", "str", "str", "str", "number", "str"],
+            headers=["Announcement date", "Title", "Sentiment", "Confidence", "AI Executive Summary"],
+            label="Announcement analysis results",
+            datatype=["str", "str", "str", "str", "str"],
             wrap=True,
         )
         run.click(

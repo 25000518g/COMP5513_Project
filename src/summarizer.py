@@ -1,25 +1,13 @@
-"""Local AI executive summaries for announcement text."""
+"""Memory-safe local executive summaries for announcement text.
+
+The summary is extractive: it ranks sentences using financial-event terms and
+returns the most informative sentences without loading a second large model.
+This keeps the app usable in a small CPU-only container alongside FinBERT.
+"""
 
 from __future__ import annotations
 
-from functools import lru_cache
 import re
-
-MODEL_NAME = "sshleifer/distilbart-cnn-12-6"
-
-
-def _chunks(text: str, size: int = 850) -> list[str]:
-    words = text.split()
-    return [" ".join(words[index : index + size]) for index in range(0, len(words), size)] or [""]
-
-
-@lru_cache(maxsize=1)
-def _pipeline():
-    try:
-        from transformers import pipeline
-    except ImportError as exc:
-        raise RuntimeError("Install transformers and torch for AI executive summaries.") from exc
-    return pipeline("summarization", model=MODEL_NAME, tokenizer=MODEL_NAME)
 
 
 def _fallback_summary(text: str, sentences: int = 3) -> str:
@@ -37,22 +25,8 @@ def _fallback_summary(text: str, sentences: int = 3) -> str:
 
 
 def generate_executive_summary(text: str, bullets: int = 3) -> str:
-    """Generate a concise executive summary, preferring the local AI model."""
+    """Generate a concise local executive summary without another model load."""
 
     if not text or not text.strip():
         raise ValueError("Cannot summarize an empty announcement.")
-    try:
-        results = _pipeline()(
-            _chunks(text),
-            max_length=110,
-            min_length=25,
-            do_sample=False,
-            truncation=True,
-        )
-        summaries = [str(result["summary_text"]).strip() for result in results if result.get("summary_text")]
-        if summaries:
-            return "\n".join(f"• {summary}" for summary in summaries[:bullets])
-    except Exception:
-        # A summary should not prevent sentiment and price analysis from being shown.
-        pass
-    return "\n".join(f"• {sentence}" for sentence in _fallback_summary(text, bullets).split(". "))
+    return "\n".join(f"• {sentence}" for sentence in _fallback_summary(text[:20_000], bullets).split(". "))
