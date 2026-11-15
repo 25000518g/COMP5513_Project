@@ -101,3 +101,16 @@ def fetch_prices(stock_code: str, start: date, end: date) -> Any:
         return _normalize_price_columns(prices)
     except Exception as exc:
         raise RuntimeError(f"Yahoo Finance could not provide prices: {exc}") from exc
+
+
+def include_next_trading_days(prices: Any, end_date: date, days: int = 3) -> Any:
+    """Keep the selected history and the first available sessions after its end."""
+
+    if prices is None or len(prices) == 0 or days <= 0:
+        return prices
+    frame = _normalize_price_columns(prices.copy())
+    index_dates = [value.date() if hasattr(value, "date") else value for value in frame.index]
+    after_end = [position for position, value in enumerate(index_dates) if value > end_date]
+    if len(after_end) > days:
+        frame = frame.iloc[: after_end[days - 1] + 1]
+    return frame

@@ -9,12 +9,17 @@ An educational Python/Gradio application for exploring Hong Kong-listed stock an
 - Retrieve announcements and notices from HKEX.
 - Save downloaded documents under `downloads/<stock-code>/` before analysis.
 - Extract text from HTML or text-based PDF announcements.
-- Classify announcement sentiment locally with FinBERT (`ProsusAI/finbert`).
+- Classify each announcement with three local FinBERT models:
+  `ProsusAI/finbert`, `NOSIBLE/financial-sentiment-v1.1-base`, and
+  `Sigma/financial-sentiment-analysis`.
 - Fetch historical prices through Yahoo Finance.
 - Display the selected price range as a K-line/candlestick chart.
 - Download all matching announcements and notices silently into `downloads/<stock-code>/`.
 - Generate a local executive summary for each downloaded announcement without loading a second large model.
-- Display announcement date, sentiment, confidence, and executive summary together in one results table.
+- Display each model name, sentiment, Buy/Sell/Hold prediction, confidence, and
+  executive summary together in the announcement results table.
+- Display a per-model summary with Buy/Hold/Sell counts, average confidence,
+  and the overall majority prediction.
 
 ## Setup
 
